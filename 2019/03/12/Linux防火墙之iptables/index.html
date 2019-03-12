@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="iptables,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="一、iptables概念1. iptable与Netfilter Netfilter是用来实现Linux内核中防火墙的Linux内核空间程序代码段。 iptables是用户管理Netfilter防火墙的用户程序。  2. iptables的组成1. 表 raw 仅用于配置数据包，以便它们免于连接跟踪。 filter 是默认表，决定是否允许数据包到达目的地。 nat用于网络地址转换（例如端口转发）。">
+<meta name="keywords" content="iptables">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux防火墙之iptables">
+<meta property="og:url" content="http://www.gaoyuanzhi.xyz/2019/03/12/Linux防火墙之iptables/index.html">
+<meta property="og:site_name" content="远志的博客">
+<meta property="og:description" content="一、iptables概念1. iptable与Netfilter Netfilter是用来实现Linux内核中防火墙的Linux内核空间程序代码段。 iptables是用户管理Netfilter防火墙的用户程序。  2. iptables的组成1. 表 raw 仅用于配置数据包，以便它们免于连接跟踪。 filter 是默认表，决定是否允许数据包到达目的地。 nat用于网络地址转换（例如端口转发）。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://www.frozentux.net/iptables-tutorial/images/tables_traverse.jpg">
+<meta property="og:updated_time" content="2019-03-12T12:52:10.490Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux防火墙之iptables">
+<meta name="twitter:description" content="一、iptables概念1. iptable与Netfilter Netfilter是用来实现Linux内核中防火墙的Linux内核空间程序代码段。 iptables是用户管理Netfilter防火墙的用户程序。  2. iptables的组成1. 表 raw 仅用于配置数据包，以便它们免于连接跟踪。 filter 是默认表，决定是否允许数据包到达目的地。 nat用于网络地址转换（例如端口转发）。">
+<meta name="twitter:image" content="https://www.frozentux.net/iptables-tutorial/images/tables_traverse.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.gaoyuanzhi.xyz/2019/03/12/Linux防火墙之iptables/">
+
+
+
+
+
+  <title>Linux防火墙之iptables | 远志的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">远志的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.gaoyuanzhi.xyz/2019/03/12/Linux防火墙之iptables/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="远志">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="远志的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Linux防火墙之iptables</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-12T20:43:54+08:00">
+                2019-03-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/03/12/Linux防火墙之iptables/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count gitment-comments-count" data-xid="/2019/03/12/Linux防火墙之iptables/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv">本文总阅读量
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>次
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="一、iptables概念"><a href="#一、iptables概念" class="headerlink" title="一、iptables概念"></a>一、iptables概念</h1><h2 id="1-iptable与Netfilter"><a href="#1-iptable与Netfilter" class="headerlink" title="1. iptable与Netfilter"></a>1. iptable与Netfilter</h2><ol>
+<li><strong>Netfilter</strong>是用来实现Linux内核中防火墙的Linux内核空间程序代码段。</li>
+<li><strong>iptables</strong>是用户管理Netfilter防火墙的用户程序。</li>
+</ol>
+<h3 id="2-iptables的组成"><a href="#2-iptables的组成" class="headerlink" title="2. iptables的组成"></a>2. iptables的组成</h3><h4 id="1-表"><a href="#1-表" class="headerlink" title="1. 表"></a>1. 表</h4><ol>
+<li>raw 仅用于配置数据包，以便它们免于连接跟踪。</li>
+<li>filter 是默认表，决定是否允许数据包到达目的地。</li>
+<li>nat用于网络地址转换（例如端口转发）。</li>
+<li>mangle 用于数据包更改。</li>
+<li>security用于强制访问控制网络规则（例如SELinux</li>
+</ol>
+<h4 id="2-链"><a href="#2-链" class="headerlink" title="2. 链"></a>2. 链</h4><p>表是由几个默认链组成的。</p>
+<ol>
+<li>PREROUTING：存在于raw,mangle,nat</li>
+<li>INPUT:存在于mangle,filter,nat</li>
+<li>OUTPUT: 存在于mangle,filter</li>
+<li>FORWARD: 存在于raw,mangle,nat,filter</li>
+<li>POSTROUTING :存在于mangle，nat</li>
+<li>自定义链</li>
+</ol>
+<h4 id="3-规则"><a href="#3-规则" class="headerlink" title="3. 规则"></a>3. 规则</h4><p>包的过滤是基于规则的。规则由条件和target组成。很据匹配条件来匹配每一个流经此处的报文，一旦匹配成功则交给后面的target进行处理。</p>
+<h5 id="1-条件"><a href="#1-条件" class="headerlink" title="1.条件"></a>1.条件</h5><p>包的来源、类型(ICMP、TCP、UDP)、目标端口</p>
+<h5 id="2-目标"><a href="#2-目标" class="headerlink" title="2.目标"></a>2.目标</h5><ol>
+<li><p>内建target</p>
+<ul>
+<li>ACCEPT</li>
+<li>DROP</li>
+<li>QUEUE</li>
+<li>RETURN</li>
+</ul>
+</li>
+<li><p>扩展target</p>
+<ul>
+<li>REJECT</li>
+<li>LOG</li>
+</ul>
+</li>
+<li><p>自定义链</p>
+</li>
+</ol>
+<p>3 自定义链</p>
+<h4 id="4-数据经过iptables的流程"><a href="#4-数据经过iptables的流程" class="headerlink" title="4. 数据经过iptables的流程"></a>4. 数据经过iptables的流程</h4><p><img src="https://www.frozentux.net/iptables-tutorial/images/tables_traverse.jpg" alt="iptables工作流程"></p>
+<h1 id="二、iptables操作"><a href="#二、iptables操作" class="headerlink" title="二、iptables操作"></a>二、iptables操作</h1><h2 id="1-查"><a href="#1-查" class="headerlink" title="1. 查"></a>1. 查</h2><h3 id="1-查看表的规则"><a href="#1-查看表的规则" class="headerlink" title="1. 查看表的规则"></a>1. 查看表的规则</h3><pre><code>语法：iptables -t 表名 -L
+</code></pre><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -L</span></span><br><span class="line">Chain INPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain FORWARD (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br></pre></td></tr></table></figure>
+<h3 id="2-查看表中指定链的规则"><a href="#2-查看表中指定链的规则" class="headerlink" title="2. 查看表中指定链的规则"></a>2. 查看表中指定链的规则</h3><pre><code>语法：iptables -t 表名 -L 链名
+</code></pre><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -L INPUT</span></span><br><span class="line">Chain INPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br></pre></td></tr></table></figure>
+<h3 id="3-查看更详细的信息：-v"><a href="#3-查看更详细的信息：-v" class="headerlink" title="3. 查看更详细的信息：-v"></a>3. 查看更详细的信息：-v</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -vL INPUT</span></span><br><span class="line">Chain INPUT (policy ACCEPT 379 packets, 26956 bytes)</span><br><span class="line"> pkts bytes target     prot opt <span class="keyword">in</span>     out     <span class="built_in">source</span>               destination</span><br><span class="line">    0     0 ACCEPT     udp  --  virbr0 any     anywhere             anywhere             udp dpt:domain</span><br></pre></td></tr></table></figure>
+<p>各字段的含义：</p>
+<p>pkts：对应规则匹配到的报文数<br>bytes：对应规则匹配到的报文包大小<br>target：规则对应的target<br>prot：规则对应的协议<br>opt：规则对应的选项<br>in：数据包从哪个接口流入<br>out：数据包从哪个接口流出<br>source：源地址<br>destination：目标地址</p>
+<p>-n：不对IP地址反解</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -vnL INPUT</span></span><br><span class="line">Chain INPUT (policy ACCEPT 24M packets, 12G bytes)</span><br><span class="line"> pkts bytes target     prot opt <span class="keyword">in</span>     out     <span class="built_in">source</span>               destination</span><br><span class="line">    0     0 ACCEPT     udp  --  virbr0 *       0.0.0.0/0            0.0.0.0/0            udp dpt:53</span><br></pre></td></tr></table></figure>
+<p>-x: 显示精确数值</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -vnL INPUT --line-number -x</span></span><br><span class="line">Chain INPUT (policy ACCEPT 24568391 packets, 11707358586 bytes)</span><br><span class="line">num      pkts      bytes target     prot opt <span class="keyword">in</span>     out     <span class="built_in">source</span>               destination</span><br><span class="line">1           0        0 ACCEPT     udp  --  virbr0 *       0.0.0.0/0            0.0.0.0/0            udp dpt:53</span><br></pre></td></tr></table></figure>
+<h3 id="4-显示规则编号"><a href="#4-显示规则编号" class="headerlink" title="4. 显示规则编号"></a>4. 显示规则编号</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -vnL INPUT --line-number</span></span><br><span class="line">Chain INPUT (policy ACCEPT 24M packets, 12G bytes)</span><br><span class="line">num   pkts bytes target     prot opt <span class="keyword">in</span>     out     <span class="built_in">source</span>               destination</span><br><span class="line">1        0     0 ACCEPT     udp  --  virbr0 *       0.0.0.0/0            0.0.0.0/0            udp dpt:53</span><br><span class="line">2        0     0 ACCEPT     tcp  --  virbr0 *       0.0.0.0/0            0.0.0.0/0            tcp dpt:53</span><br><span class="line">3        0     0 ACCEPT     udp  --  virbr0 *       0.0.0.0/0            0.0.0.0/0            udp dpt:67</span><br><span class="line">4        0     0 ACCEPT     tcp  --  virbr0 *       0.0.0.0/0            0.0.0.0/0            tcp dpt:67</span><br></pre></td></tr></table></figure>
+<h2 id="2-增"><a href="#2-增" class="headerlink" title="2. 增"></a>2. 增</h2><ol>
+<li>插入一条规则(默认插入到第一行)</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">语法：iptables -t 表名 -I 链名 匹配条件 -j 动作</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.102 -j DROP</span></span><br></pre></td></tr></table></figure>
+<p>-t：操作的表<br>-I：插入指定的链<br>-s：源地址<br>-j：匹配条件满足后执行的target(动作)</p>
+<p>指定插入到某一行<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -A INPUT 3 -s 172.16.10.103 -j ACCEPT</span></span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li>追加一条规则(追加到最后一行)</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">语法：iptables -t 表名 -A 链名 匹配条件 -j 动作</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -A INPUT -s 172.16.10.102 -j ACCEPT</span></span><br></pre></td></tr></table></figure>
+<p>此时filter表的状态<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -nvL INPUT</span></span><br><span class="line">Chain INPUT (policy ACCEPT 27 packets, 2764 bytes)</span><br><span class="line"> pkts bytes target     prot opt <span class="keyword">in</span>     out     <span class="built_in">source</span>               destination</span><br><span class="line">  203 17052 DROP       all  --  *      *       172.16.10.102        0.0.0.0/0</span><br><span class="line">    0     0 ACCEPT     all  --  *      *       172.16.10.102        0.0.0.0/0</span><br></pre></td></tr></table></figure></p>
+<p><strong>规则匹配顺序</strong>：从上到下匹配，如果前面的规则匹配成功就不会执行后面的规则了。</p>
+<h2 id="3-删"><a href="#3-删" class="headerlink" title="3. 删"></a>3. 删</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">语法：iptables -t 表名 -D 链名 匹配条件 -j 动作</span><br></pre></td></tr></table></figure>
+<ol>
+<li>根据规则的编号删除</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">语法：# iptables -t filter -D INPUT 编号</span><br></pre></td></tr></table></figure>
+<p>示例：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 删除第3条规则</span></span><br><span class="line"><span class="comment"># iptables -t filter -D INPUT 3</span></span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li>根据具体的匹配条件与target删除</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -D INPUT -s 172.16.10.102 -j DROP</span></span><br></pre></td></tr></table></figure>
+<p>删除指定表中某条链的所有规则</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -F INPUT</span></span><br></pre></td></tr></table></figure>
+<p>-F:flush 冲刷(删除)指定链中的所有规则</p>
+<h2 id="4-改"><a href="#4-改" class="headerlink" title="4. 改"></a>4. 改</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">语法：iptables -t 表名 -R 链名 规则序号 规则原来的匹配条件 -j 动作</span><br></pre></td></tr></table></figure>
+<ol>
+<li>修改规则</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -R INPUT 1 -s 172.16.10.100 -j ACCEPT</span></span><br></pre></td></tr></table></figure>
+<p>-R：修改指定的链<br>注意：必须要指定源地址</p>
+<ol start="2">
+<li>修改链的默认策略</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">root@node1:~<span class="comment"># iptables -L</span></span><br><span class="line">Chain INPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain FORWARD (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"><span class="comment"># 将表中 FORWARD 中链的策略修改为 DROP</span></span><br><span class="line">root@node1:~<span class="comment"># iptables -t filter -P FORWARD DROP</span></span><br><span class="line">root@node1:~<span class="comment"># iptables -L</span></span><br><span class="line">Chain INPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain FORWARD (policy DROP)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br></pre></td></tr></table></figure>
+<ol start="5">
+<li>保存规则</li>
+</ol>
+<p>ubuntu系统参考：<a href="https://help.ubuntu.com/community/IptablesHowTo" target="_blank" rel="noopener">https://help.ubuntu.com/community/IptablesHowTo</a></p>
+<h1 id="三、匹配条件"><a href="#三、匹配条件" class="headerlink" title="三、匹配条件"></a>三、匹配条件</h1><h2 id="1-基本匹配"><a href="#1-基本匹配" class="headerlink" title="1. 基本匹配"></a>1. 基本匹配</h2><h3 id="1-1-源地址-s"><a href="#1-1-源地址-s" class="headerlink" title="1.1. 源地址 -s"></a>1.1. 源地址 -s</h3><ol>
+<li>指定IP</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.100,172.16.10.102 -j DROP</span></span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>指定网段</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.0/24 -j DROP</span></span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>取反</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT ! -s 172.16.10.102 -j DROP</span></span><br></pre></td></tr></table></figure>
+<h3 id="1-2-目标地址-d"><a href="#1-2-目标地址-d" class="headerlink" title="1.2. 目标地址 -d"></a>1.2. 目标地址 -d</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -d 172.16.10.101 -j DROP</span></span><br></pre></td></tr></table></figure>
+<h3 id="1-3-协议类型-p"><a href="#1-3-协议类型-p" class="headerlink" title="1.3. 协议类型 -p"></a>1.3. 协议类型 -p</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.102 -d 172.16.10.101 -p tcp -j REJECT</span></span><br></pre></td></tr></table></figure>
+<p>-p [tcp|udp|icmp|udplite|icmpv6|ah|sctp]</p>
+<h3 id="1-4-网卡接口-i-o"><a href="#1-4-网卡接口-i-o" class="headerlink" title="1.4. 网卡接口 -i/-o"></a>1.4. 网卡接口 -i/-o</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT  -i eth0  -p icmp -j REJECT</span></span><br></pre></td></tr></table></figure>
+<p>-i: 只能用于PREROUING、INPUT、FORWARD<br>-o: 只能用于FORWARD、OUTPUT、POSTROUTING</p>
+<h2 id="2-扩展匹配"><a href="#2-扩展匹配" class="headerlink" title="2.扩展匹配"></a>2.扩展匹配</h2><p>扩展匹配条件使用时需要依赖一些扩展模块</p>
+<h3 id="2-1-tcp模块"><a href="#2-1-tcp模块" class="headerlink" title="2.1 tcp模块"></a>2.1 tcp模块</h3><ol>
+<li>目标端口 –dport</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.102 -m tcp -p tcp --dport 22 -j REJECT</span></span><br></pre></td></tr></table></figure>
+<p>-m: 扩展模块名<br>-p: 协议名称</p>
+<ol start="2">
+<li>源端口 –sport</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.102 -m tcp -p tcp --sport 22 -j ACCEPT</span></span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>同时指定多个端口(连续的端口)</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.102 -m tcp -p tcp --sport 22:25 -j ACCEPT</span></span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>–tcp-flags</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.102 -m tcp -p tcp --dport 22 --tcp-flags SYN,ACK,FIN,RST,URG,PSH SYN -j REJECT</span></span><br><span class="line">或</span><br><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.102 -m tcp -p tcp --dport 22 --tcp-flags ALL SYN -j REJECT</span></span><br></pre></td></tr></table></figure>
+<p>–tcp-flags 需要两个参数<br>–tcp-flags SYN,ACK,FIN,RST,URG,PSH    SYN<br>–tcp-flags 需要匹配TCP头中的哪些标志位    在第一部分的标志位列表中，哪些标志位必须为1</p>
+<h3 id="2-2-multiport模块-多个不连续的端口"><a href="#2-2-multiport模块-多个不连续的端口" class="headerlink" title="2.2 multiport模块(多个不连续的端口)"></a>2.2 multiport模块(多个不连续的端口)</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -s 172.16.10.102 -m multiport -p tcp --dport 22,80,8080 -j ACCEPT</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-3-udp扩展"><a href="#2-3-udp扩展" class="headerlink" title="2.3 udp扩展"></a>2.3 udp扩展</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -m udp -p udp --dport 137 -j ACCEPT</span></span><br><span class="line"><span class="comment"># iptables -t filter -I INPUT -m udp -p udp --sport 138 -j ACCEPT</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-4-icmp扩展"><a href="#2-4-icmp扩展" class="headerlink" title="2.4 icmp扩展"></a>2.4 icmp扩展</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 别的主机ping不进来，自己向外请求回复的报文也无法进入防火墙</span></span><br><span class="line"><span class="comment"># iptables -t filter -I INPUT -p icmp -j REJECT</span></span><br></pre></td></tr></table></figure>
+<p>只禁止被人ping</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -m icmp -p icmp --icmp-type 8/0 -j REJECT</span></span><br><span class="line"><span class="comment"># 或</span></span><br><span class="line"><span class="comment"># iptables -t filter -I INPUT -m icmp -p icmp --icmp-type "echo-request" -j REJECT</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-5-state扩展"><a href="#2-5-state扩展" class="headerlink" title="2.5 state扩展"></a>2.5 state扩展</h3><p>state模块可以实现连接追踪机制</p>
+<p>连接状态：NEW、ESTABLISHED、RELATED、INVALID、UNTRACKED</p>
+<ol>
+<li>NEW：连接中的第一个包，状态就是NEW</li>
+<li>ESTABLISHED：NEW状态后面的包的状态</li>
+<li>RELATED：一个服务建立了两个连接，连个连接中的某些报文直接有关系</li>
+<li>INVALID：包无法被识别</li>
+<li>UNTRACKED：报文未被追踪</li>
+</ol>
+<p>实现只允许回应的报文通过防火墙(只能访问别人，别人不能访问自己)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -I INPUT -m state --state  RELATED,ESTABLISHED -j ACCEPT</span></span><br><span class="line"><span class="comment"># iptables -t filter -A INPUT -j REJECT</span></span><br></pre></td></tr></table></figure>
+<h1 id="四、黑白名单"><a href="#四、黑白名单" class="headerlink" title="四、黑白名单"></a>四、黑白名单</h1><p>白名单：放行匹配规则的包<br>黑名单：拒绝匹配规则的包</p>
+<p>白名单的实现：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 放行22端口</span></span><br><span class="line"><span class="comment"># iptables -I INPUT -p tcp --dport 22 -j ACCEPT</span></span><br><span class="line"><span class="comment"># INPUT链的默认策略改为DROP</span></span><br><span class="line"><span class="comment"># iptables -P INPUT DROP</span></span><br></pre></td></tr></table></figure>
+<p>不建议把默认策略设置为DROP，一旦执行iptables -F，任何包都进不去，ssh就会断开</p>
+<p>优化方法</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 放行22端口</span></span><br><span class="line"><span class="comment"># iptables -I INPUT -p tcp --dport 22 -j ACCEPT</span></span><br><span class="line"><span class="comment"># 其他都拒绝</span></span><br><span class="line"><span class="comment"># iptables -A INPUT -j REJECT</span></span><br></pre></td></tr></table></figure>
+<h1 id="五、自定义链"><a href="#五、自定义链" class="headerlink" title="五、自定义链"></a>五、自定义链</h1><ol>
+<li>自定义链的意义： 便于分类管理</li>
+<li>自定义链不能直接使用，需要被默认链引用才可以使用</li>
+</ol>
+<h2 id="1-创建"><a href="#1-创建" class="headerlink" title="1. 创建"></a>1. 创建</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t filter -N IN_WEB</span></span><br><span class="line"><span class="comment"># iptables -L</span></span><br><span class="line">Chain INPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain FORWARD (policy DROP)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain IN_WEB (0 references) <span class="comment"># 引用计数为0</span></span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br></pre></td></tr></table></figure>
+<p>-n： 自定义链的名称</p>
+<h2 id="2-给自定义链添加规则"><a href="#2-给自定义链添加规则" class="headerlink" title="2. 给自定义链添加规则"></a>2. 给自定义链添加规则</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@node1:~<span class="comment"># iptables -I IN_WEB -s 172.16.10.100 -j REJECT</span></span><br><span class="line">root@node1:~<span class="comment"># iptables -t filter -nvL IN_WEB</span></span><br><span class="line">Chain IN_WEB (0 references)</span><br><span class="line"> pkts bytes target     prot opt <span class="keyword">in</span>     out     <span class="built_in">source</span>               destination</span><br><span class="line">    0     0 REJECT     all  --  *      *       172.16.10.100        0.0.0.0/0            reject-with icmp-port-unreachable</span><br></pre></td></tr></table></figure>
+<h2 id="3-引用自定义链"><a href="#3-引用自定义链" class="headerlink" title="3. 引用自定义链"></a>3. 引用自定义链</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -I INPUT -p tcp --dport 80 -j IN_WEB</span></span><br><span class="line"><span class="comment"># iptables -L</span></span><br><span class="line">Chain INPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line">IN_WEB     tcp  --  anywhere             anywhere             tcp dpt:http</span><br><span class="line"></span><br><span class="line">Chain FORWARD (policy DROP)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line"></span><br><span class="line">Chain IN_WEB (1 references)</span><br><span class="line">target     prot opt <span class="built_in">source</span>               destination</span><br><span class="line">REJECT     all  --  172.16.10.100        anywhere             reject-with icmp-port-unreachable</span><br></pre></td></tr></table></figure>
+<h2 id="4-重命名自定义链"><a href="#4-重命名自定义链" class="headerlink" title="4. 重命名自定义链"></a>4. 重命名自定义链</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -E IN_WEB WEB</span></span><br></pre></td></tr></table></figure>
+<h2 id="5-删除"><a href="#5-删除" class="headerlink" title="5. 删除"></a>5. 删除</h2><p>删除条件</p>
+<ol>
+<li>自定义链没有被任何默认链引用，即自定义链的引用计数为0</li>
+<li>自定义链中没有任何规则</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -D INPUT 1</span></span><br><span class="line"><span class="comment"># iptables -t filter -F WEB</span></span><br><span class="line"><span class="comment"># iptables -X WEB</span></span><br></pre></td></tr></table></figure>
+<h1 id="六、动作-target"><a href="#六、动作-target" class="headerlink" title="六、动作(target)"></a>六、动作(target)</h1><h2 id="1-基础动作"><a href="#1-基础动作" class="headerlink" title="1. 基础动作"></a>1. 基础动作</h2><h3 id="1-ACCEPT"><a href="#1-ACCEPT" class="headerlink" title="1. ACCEPT"></a>1. ACCEPT</h3><h3 id="2-DROP"><a href="#2-DROP" class="headerlink" title="2. DROP"></a>2. DROP</h3><h2 id="2-扩展动作"><a href="#2-扩展动作" class="headerlink" title="2. 扩展动作"></a>2. 扩展动作</h2><h3 id="2-1-REJECT"><a href="#2-1-REJECT" class="headerlink" title="2.1.  REJECT"></a>2.1.  REJECT</h3><p>常用选项：–reject-with　可以设置对方被拒绝时的提示信息</p>
+<p>值：<br>icmp-port-unreachable 默认<br>icmp-net-unreachable<br>icmp-host-unreachabe<br>icmp-proto-unreachabe<br>icmp-net-prohibited<br>icmp-admin-prohibited</p>
+<h3 id="2-2-LOG"><a href="#2-2-LOG" class="headerlink" title="2.2. LOG"></a>2.2. LOG</h3><p>将符合条件的报文的相关信息记录到日志中</p>
+<p>可用选项：</p>
+<p>–log-level: [emerg|alert|crit|error|warning|notice|info|debug]<br>–log-prefix: 信息前缀（29个字符以内）<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 把想要主动连接22端口的报文及相关信息记录到日志中</span></span><br><span class="line"><span class="comment"># iptables -I INPUT -p tcp --dport 22 -m state --state NEW -j LOG --log-prefix "want-in-from-port-22"</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="2-3-SNAT"><a href="#2-3-SNAT" class="headerlink" title="2.3 SNAT"></a>2.3 SNAT</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t nat -A POSTROUTING -s 10.1.0.0/16 -j SNAT --to-source 172.16.0.101</span></span><br></pre></td></tr></table></figure>
+<p>-t: 操作nat表<br>-A: 将规则添加到POSTROUTING链末尾<br>-s: 源地址<br>-j: 使用 SNAT 动作<br>–to-source: 把匹配到的报文修改为指定地址</p>
+<h3 id="2-4-SNAT"><a href="#2-4-SNAT" class="headerlink" title="2.4 SNAT"></a>2.4 SNAT</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t nat -I PREROUTING -d 172.16.10.101 -p tcp --dport 3389 -j DNAT --to-destination 10.1.1.6:3389</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-5-MASQUERADE"><a href="#2-5-MASQUERADE" class="headerlink" title="2.5 MASQUERADE"></a>2.5 MASQUERADE</h3><p>与SNAT类似，但是可以动态的将源地址转换为可用的IP地址</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t nat -A POSTROUTING -s 10.1.0.0/16 -o eth0 -j MASQUERADE</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-6-REDIRECT"><a href="#2-6-REDIRECT" class="headerlink" title="2.6 REDIRECT"></a>2.6 REDIRECT</h3><p>在本机进程端口映射</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080</span></span><br></pre></td></tr></table></figure>
+<p>使用NAT需要开启转发：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># echo 1 &gt; /proc/sys/net/ipv4/ip_forward</span></span><br></pre></td></tr></table></figure>
+<hr>
+<p>参考：</p>
+<p><a href="https://wiki.archlinux.org/index.php/iptables" target="_blank" rel="noopener">https://wiki.archlinux.org/index.php/iptables</a></p>
+<h2 id="拒绝与禁止一个数据包的区别"><a href="#拒绝与禁止一个数据包的区别" class="headerlink" title="拒绝与禁止一个数据包的区别"></a>拒绝与禁止一个数据包的区别</h2><p>拒绝：丢弃数据包的同时给发送者返回一会ICMP错误消息</p>
+<p>丢弃：数据包直接丢弃不返回任何通知</p>
+<p>为了安全，通常直接丢弃，原因有3：</p>
+<ol>
+<li>发送错误消息会使通信量加倍</li>
+<li>响应的数据包可能是拒绝服务工具</li>
+<li>即使一个错误的消息都会给攻击者提供潜在的有用信息</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iptables/" rel="tag"># iptables</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/03/12/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+      
+        <div id="gitment-container"></div>
+      
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">远志</p>
+              <p class="site-description motion-element" itemprop="description">终有疾风起，人生不言弃</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/yuanzhigao" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、iptables概念"><span class="nav-number">1.</span> <span class="nav-text">一、iptables概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-iptable与Netfilter"><span class="nav-number">1.1.</span> <span class="nav-text">1. iptable与Netfilter</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-iptables的组成"><span class="nav-number">1.1.1.</span> <span class="nav-text">2. iptables的组成</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-表"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">1. 表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-链"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">2. 链</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-规则"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">3. 规则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-条件"><span class="nav-number">1.1.1.3.1.</span> <span class="nav-text">1.条件</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-目标"><span class="nav-number">1.1.1.3.2.</span> <span class="nav-text">2.目标</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-数据经过iptables的流程"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">4. 数据经过iptables的流程</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二、iptables操作"><span class="nav-number">2.</span> <span class="nav-text">二、iptables操作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-查"><span class="nav-number">2.1.</span> <span class="nav-text">1. 查</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-查看表的规则"><span class="nav-number">2.1.1.</span> <span class="nav-text">1. 查看表的规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-查看表中指定链的规则"><span class="nav-number">2.1.2.</span> <span class="nav-text">2. 查看表中指定链的规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-查看更详细的信息：-v"><span class="nav-number">2.1.3.</span> <span class="nav-text">3. 查看更详细的信息：-v</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-显示规则编号"><span class="nav-number">2.1.4.</span> <span class="nav-text">4. 显示规则编号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-增"><span class="nav-number">2.2.</span> <span class="nav-text">2. 增</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-删"><span class="nav-number">2.3.</span> <span class="nav-text">3. 删</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-改"><span class="nav-number">2.4.</span> <span class="nav-text">4. 改</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三、匹配条件"><span class="nav-number">3.</span> <span class="nav-text">三、匹配条件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-基本匹配"><span class="nav-number">3.1.</span> <span class="nav-text">1. 基本匹配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-源地址-s"><span class="nav-number">3.1.1.</span> <span class="nav-text">1.1. 源地址 -s</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-目标地址-d"><span class="nav-number">3.1.2.</span> <span class="nav-text">1.2. 目标地址 -d</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-协议类型-p"><span class="nav-number">3.1.3.</span> <span class="nav-text">1.3. 协议类型 -p</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-网卡接口-i-o"><span class="nav-number">3.1.4.</span> <span class="nav-text">1.4. 网卡接口 -i/-o</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-扩展匹配"><span class="nav-number">3.2.</span> <span class="nav-text">2.扩展匹配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-tcp模块"><span class="nav-number">3.2.1.</span> <span class="nav-text">2.1 tcp模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-multiport模块-多个不连续的端口"><span class="nav-number">3.2.2.</span> <span class="nav-text">2.2 multiport模块(多个不连续的端口)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-udp扩展"><span class="nav-number">3.2.3.</span> <span class="nav-text">2.3 udp扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-icmp扩展"><span class="nav-number">3.2.4.</span> <span class="nav-text">2.4 icmp扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-state扩展"><span class="nav-number">3.2.5.</span> <span class="nav-text">2.5 state扩展</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#四、黑白名单"><span class="nav-number">4.</span> <span class="nav-text">四、黑白名单</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#五、自定义链"><span class="nav-number">5.</span> <span class="nav-text">五、自定义链</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-创建"><span class="nav-number">5.1.</span> <span class="nav-text">1. 创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-给自定义链添加规则"><span class="nav-number">5.2.</span> <span class="nav-text">2. 给自定义链添加规则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-引用自定义链"><span class="nav-number">5.3.</span> <span class="nav-text">3. 引用自定义链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-重命名自定义链"><span class="nav-number">5.4.</span> <span class="nav-text">4. 重命名自定义链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-删除"><span class="nav-number">5.5.</span> <span class="nav-text">5. 删除</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#六、动作-target"><span class="nav-number">6.</span> <span class="nav-text">六、动作(target)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-基础动作"><span class="nav-number">6.1.</span> <span class="nav-text">1. 基础动作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-ACCEPT"><span class="nav-number">6.1.1.</span> <span class="nav-text">1. ACCEPT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-DROP"><span class="nav-number">6.1.2.</span> <span class="nav-text">2. DROP</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-扩展动作"><span class="nav-number">6.2.</span> <span class="nav-text">2. 扩展动作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-REJECT"><span class="nav-number">6.2.1.</span> <span class="nav-text">2.1.  REJECT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-LOG"><span class="nav-number">6.2.2.</span> <span class="nav-text">2.2. LOG</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-SNAT"><span class="nav-number">6.2.3.</span> <span class="nav-text">2.3 SNAT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-SNAT"><span class="nav-number">6.2.4.</span> <span class="nav-text">2.4 SNAT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-MASQUERADE"><span class="nav-number">6.2.5.</span> <span class="nav-text">2.5 MASQUERADE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-REDIRECT"><span class="nav-number">6.2.6.</span> <span class="nav-text">2.6 REDIRECT</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#拒绝与禁止一个数据包的区别"><span class="nav-number">6.3.</span> <span class="nav-text">拒绝与禁止一个数据包的区别</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">远志</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      本站访客数
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      人次
+    </span>
+  
+
+  
+    <span class="site-pv">
+      本站总访问量
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      次
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'Y8sdVNj7oJXfhnzI1INT5iAj-gzGzoHsz',
+        appKey: 'j3HTTdavx4LaVW650gtyloxo',
+        placeholder: '留下你的足迹吧...',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
